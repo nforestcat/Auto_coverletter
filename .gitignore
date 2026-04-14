@@ -1,0 +1,20 @@
+# 개인 데이터 및 결과물 (사용자마다 다르므로 제외)
+user_profile.md
+company_info.md
+draft.md
+input_data.json
+
+# 보안 및 환경 설정
+.env
+
+# Python 캐시 및 가상환경
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env/
+
+# IDE 설정
+.vscode/
+.idea/
