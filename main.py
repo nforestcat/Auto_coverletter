@@ -165,7 +165,7 @@ class CVAutoApp:
                 self.result_text.insert(tk.END, f"\n[!] 추가 정보가 필요합니다.\n\n🧐 질문: {analysis.follow_up_question}\n")
                 self.result_text.insert(tk.END, f"\n부족한 요소: {', '.join(analysis.missing_elements)}")
             else:
-                self.result_text.insert(tk.END, "\n[✔] 분석 완료! 삼성전자 최적화 자소서를 작성합니다...\n")
+                self.result_text.insert(tk.END, f"\n[✔] 분석 완료! {user_data['company']} 최적화 자소서를 작성합니다...\n")
                 self.root.update()
                 
                 draft = self.processor.generate_draft(user_data, analysis)
