@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, simpledialog
 import json
 import os
+import re
 from typing import List, Optional
 from pydantic import BaseModel
 from google import genai
@@ -20,23 +21,59 @@ class ExperienceAnalysis(BaseModel):
 class CVAIProcessor:
     def __init__(self, api_key: str):
         self.client = genai.Client(api_key=api_key)
-        self.model_id = 'gemma-4-31b-it'
+        self.research_model = 'gemini-3.1-flash-lite-preview'
+        self.analysis_model = 'gemma-4-31b-it'
+        self.company_dir = "company"
+        
+        if not os.path.exists(self.company_dir):
+            os.makedirs(self.company_dir)
 
-    def analyze_input(self, user_data: dict) -> ExperienceAnalysis:
+    def get_safe_filename(self, name: str) -> str:
+        return re.sub(r'[\\/*?:"<>|]', "_", name)
+
+    def ensure_company_data(self, company_name: str) -> str:
+        """기업 정보가 로컬에 있는지 확인하고, 없으면 연구를 수행합니다."""
+        safe_name = self.get_safe_filename(company_name)
+        file_path = os.path.join(self.company_dir, f"{safe_name}.md")
+
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+
+        # 정보가 없는 경우 연구 수행 (gemini-3.1-flash-lite-preview)
+        prompt = f"'{company_name}'의 비전, 핵심 가치, 인재상, 최신 키워드를 검색하여 Markdown 형식으로 정리해 주세요."
+        instruction = "전문 기업 분석가로서 최신 정보를 정확히 제공합니다."
+        
+        response = self.client.models.generate_content(
+            model=self.research_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(system_instruction=instruction)
+        )
+        
+        content = f"# [기업 정보] {company_name}\n\n" + response.text
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return content
+
+    def analyze_input(self, user_data: dict, company_info: str) -> ExperienceAnalysis:
+        """Gemma 4 모델을 사용하여 기업 정보와 사용자의 경험을 정밀 분석합니다."""
         prompt = f"""
-        지원 직무: {user_data['role']}
-        지원 기업: {user_data['company']}
+        [지원 기업 정보]
+        {company_info}
+
+        [지원자 정보]
+        직무: {user_data['role']}
         경험 원문: {user_data['experience']}
         성격/장단점: {user_data['traits']}
         
-        대기업 자소서 작성을 위한 정보의 충분성을 분석하세요.
+        위 기업의 비전과 인재상을 바탕으로 지원자의 경험이 충분한지 분석하세요.
         특히 '입사 후 포부'를 위한 3단계 로드맵(적응-문제해결-비전)이 나올 수 있는지 확인하세요.
         """
         
-        instruction = "당신은 냉철한 커리어 분석가입니다. 정보를 정밀 분석하고 부족한 부분을 찾아냅니다."
+        instruction = "당신은 냉철한 커리어 분석가(omg-analyst)입니다. 기업 정보와 지원자 경험의 정합성을 정밀 분석합니다."
 
         response = self.client.models.generate_content(
-            model=self.model_id,
+            model=self.analysis_model,
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=instruction,
@@ -47,21 +84,26 @@ class CVAIProcessor:
         )
         return ExperienceAnalysis.model_validate_json(response.text)
 
-    def generate_draft(self, user_data: dict, analysis: ExperienceAnalysis) -> str:
+    def generate_draft(self, user_data: dict, analysis: ExperienceAnalysis, company_info: str) -> str:
+        """Gemma 4 모델을 사용하여 최종 자소서 초안을 생성합니다."""
         prompt = f"""
-        분석 데이터: {analysis.extracted_star}
+        [기업 정보]
+        {company_info}
+
+        [분석 데이터]
+        {analysis.extracted_star}
         포부 전략: {analysis.future_roadmap_plan}
         기업/직무: {user_data['company']} / {user_data['role']}
         
         다음 구조로 작성하세요:
         1. 주제 (소제목)
-        2. STAR 본문
-        3. 입사 후 포부 (3단계 시간대별 로드맵)
+        2. STAR 본문 (기업의 인재상에 맞춘 키워드 강조)
+        3. 입사 후 포부 (기업 비전과 연결된 3단계 로드맵)
         """
         instruction = "당신은 최고 수준의 자소서 전문가입니다. 사용자의 경험과 기업의 가치를 완벽하게 매칭합니다."
 
         response = self.client.models.generate_content(
-            model=self.model_id,
+            model=self.analysis_model,
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=instruction,
@@ -87,31 +129,22 @@ class CVAutoApp:
             self.root.destroy()
 
     def check_and_get_api_key(self):
-        """ .env에서 키를 찾고 없으면 입력을 요청합니다. """
         load_dotenv(self.env_path)
         api_key = os.getenv("GEMINI_API_KEY")
-
         if not api_key:
-            # 키 입력 팝업창
-            new_key = simpledialog.askstring("API 키 입력", 
-                "Gemini API Key가 발견되지 않았습니다.\nGoogle AI Studio에서 발급받은 키를 입력해 주세요:",
-                show='*')
-            
+            new_key = simpledialog.askstring("API 키 입력", "Gemini API Key를 입력해 주세요:", show='*')
             if new_key:
-                # .env 파일 생성 및 저장
                 with open(self.env_path, "w") as f:
                     f.write(f"GEMINI_API_KEY={new_key}\n")
                 load_dotenv(self.env_path)
                 return new_key
-            else:
-                return None
+            return None
         return api_key
 
     def setup_ui(self):
         self.main_frame = ttk.Frame(self.root, padding="20")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # UI 요소 (기존과 동일하되 디자인 소폭 개선)
         ttk.Label(self.main_frame, text="1. 기본 정보 및 기업", font=("Helvetica", 12, "bold")).pack(anchor=tk.W)
         self.name_entry = self._create_field("이름", "홍길동")
         self.role_entry = self._create_field("지원 직무", "백엔드 개발자")
@@ -155,20 +188,25 @@ class CVAutoApp:
             return
 
         self.result_text.delete("1.0", tk.END)
-        self.result_text.insert(tk.END, "💎 AI 분석가가 당신의 커리어를 검토 중입니다...\n")
+        self.result_text.insert(tk.END, f"💎 {user_data['company']} 정보를 분석 중입니다...\n")
         self.root.update()
 
         try:
-            analysis = self.processor.analyze_input(user_data)
+            # 1. 기업 정보 확보 (캐시 확인 또는 연구 수행)
+            company_info = self.processor.ensure_company_data(user_data['company'])
+            
+            # 2. Gemma 4를 통한 정밀 분석
+            analysis = self.processor.analyze_input(user_data, company_info)
             
             if not analysis.is_sufficient:
                 self.result_text.insert(tk.END, f"\n[!] 추가 정보가 필요합니다.\n\n🧐 질문: {analysis.follow_up_question}\n")
                 self.result_text.insert(tk.END, f"\n부족한 요소: {', '.join(analysis.missing_elements)}")
             else:
-                self.result_text.insert(tk.END, f"\n[✔] 분석 완료! {user_data['company']} 최적화 자소서를 작성합니다...\n")
+                self.result_text.insert(tk.END, f"\n[✔] 분석 완료! 기업 맞춤형 자소서를 작성합니다...\n")
                 self.root.update()
                 
-                draft = self.processor.generate_draft(user_data, analysis)
+                # 3. 최종 초안 생성
+                draft = self.processor.generate_draft(user_data, analysis, company_info)
                 self.result_text.insert(tk.END, f"\n--- ✨ 생성된 자기소개서 초안 ---\n\n{draft}")
                 
                 with open("draft.md", "w", encoding="utf-8") as f:
@@ -180,7 +218,6 @@ class CVAutoApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    # 폰트 깨짐 방지 (Windows용 가독성 개선)
     try:
         from ctypes import windll
         windll.shcore.SetProcessDpiAwareness(1)

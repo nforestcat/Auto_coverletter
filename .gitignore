@@ -1,22 +1,22 @@
-# 개인 데이터 및 결과물 (사용자마다 다르므로 제외)
-user_profile.md
-company_info.md
-draft.md
-input_data.json
-
-# 보안 및 환경 설정
-.env
-.gemini/
-.omg/
-
-# Python 캐시 및 가상환경
-...
-
+# Python 환경
+__pycache__/
 *.py[cod]
 *$py.class
-venv/
 .venv/
-.env/
+venv/
+ENV/
+env/
+.env
+
+# 프로젝트 결과물 및 데이터 (개인정보 보호 및 가변 데이터)
+company/
+draft.md
+user_profile.md
+company_info.md
+
+# OS 특성 파일
+.DS_Store
+Thumbs.db
 
 # IDE 설정
 .vscode/
