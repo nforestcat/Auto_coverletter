@@ -1,24 +1,24 @@
-# Python 환경
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-.venv/
+.env
+.venv
+env/
 venv/
 ENV/
-env/
-.env
 
-# 프로젝트 결과물 및 데이터 (개인정보 보호 및 가변 데이터)
+# 프로젝트 결과물 및 데이터
 company/
-draft.md
+draft/
+*.log
 user_profile.md
 company_info.md
 
-# OS 특성 파일
+# 시스템 및 로그
 .DS_Store
 Thumbs.db
 
 # IDE 설정
 .vscode/
 .idea/
-.mcp.json
