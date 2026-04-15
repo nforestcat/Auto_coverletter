@@ -23,7 +23,7 @@ class ExperienceAnalysis(BaseModel):
 class CVAIProcessor:
     def __init__(self, api_key: str, log_func=None):
         self.client = genai.Client(api_key=api_key)
-        self.research_model = 'gemini-3.1-flash-lite-preview'
+        self.research_model = 'gemma-4-26b-a4b-it'
         self.analysis_model = 'gemma-4-31b-it'
         self.company_dir = "company"
         self.draft_dir = "draft"
@@ -49,14 +49,20 @@ class CVAIProcessor:
             with open(file_path, "r", encoding="utf-8") as f:
                 return f.read()
 
-        self.log(f"🔍 로컬 캐시 없음. {self.research_model} 모델로 검색 시작...")
-        prompt = f"'{company_name}'의 비전, 핵심 가치, 인재상, 최신 키워드를 검색하여 Markdown 형식으로 정리해 주세요. 모든 내용은 한국어로 작성하세요."
-        instruction = "당신은 전문 기업 분석가입니다. 모든 응답은 반드시 한국어로 작성해야 합니다."
+        self.log(f"🔍 로컬 캐시 없음. {self.research_model} 모델로 실시간 검색 시작...")
+        prompt = f"'{company_name}'의 공식 홈페이지와 최신 뉴스를 검색하여 비전, 핵심 가치, 인재상, 최근 사업 전략 키워드를 Markdown 형식으로 상세히 정리해 주세요. 모든 내용은 반드시 한국어로 작성하세요."
+        instruction = "당신은 전문 기업 분석가입니다. 반드시 Google Search 도구를 사용하여 최신 정보를 확인하고 모든 내용을 한국어로 작성해야 합니다."
         
+        # 구글 검색 도구 활성화
+        google_search_tool = types.Tool(google_search=types.GoogleSearch())
+
         response = self.client.models.generate_content(
             model=self.research_model,
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction=instruction)
+            config=types.GenerateContentConfig(
+                system_instruction=instruction,
+                tools=[google_search_tool]  # 실시간 검색 도구 추가
+            )
         )
         
         content = f"# [기업 정보] {company_name}\n\n" + response.text
