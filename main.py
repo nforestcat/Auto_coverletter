@@ -20,7 +20,7 @@ class ExperienceAnalysis(BaseModel):
 class CVAIProcessor:
     def __init__(self, api_key: str):
         self.client = genai.Client(api_key=api_key)
-        self.model_id = 'gemini-2.0-flash'
+        self.model_id = 'gemma-4-31b-it'
 
     def analyze_input(self, user_data: dict) -> ExperienceAnalysis:
         prompt = f"""
