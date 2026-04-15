@@ -8,6 +8,10 @@ env/
 venv/
 ENV/
 
+# 통합 전 초기 코드 및 테스트 파일
+research_company.py
+cv_auto_gui.py
+
 # 프로젝트 결과물 및 데이터
 company/
 draft/
