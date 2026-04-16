@@ -25,6 +25,12 @@ company_info.md
 .DS_Store
 Thumbs.db
 
+# IDE 및 에이전트 설정
+.gemini/
+.omg/state/
+.mcp.json
+draft.md
+
 # IDE 설정
 .vscode/
 .idea/
