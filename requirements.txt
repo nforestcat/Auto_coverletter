@@ -1,15 +1,17 @@
 # CV-Auto: Streamlit 기반 실무 면접관 AI 자소서 컨설턴트 의존성
 
-# 메인 프레임워크 및 UI
+# 웹 GUI 프레임워크
 streamlit>=1.33.0
 
-# Google AI SDK (Gemma 4 및 실시간 검색 기능 지원)
+# Google AI SDK (Gemma 4 및 실시간 검색 도구 지원)
 google-genai>=0.3.0
 
-# 데이터 구조 및 검증 (Structured Outputs 필수)
+# 데이터 구조화 및 검증 (Structured Outputs 필수)
 pydantic>=2.7.0
 pydantic-settings>=2.2.0
 
-# 환경 변수 및 보안
+# 환경 변수 및 설정 관리
 python-dotenv>=1.0.1
+
+# 보안 및 통신 안정성 (SSL 인증서 지원)
 certifi>=2024.2.2

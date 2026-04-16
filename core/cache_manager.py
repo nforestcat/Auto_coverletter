@@ -33,6 +33,15 @@ class CacheManager:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
+    def delete_company_cache(self, company_name: str) -> bool:
+        """특정 기업의 로컬 캐시 파일을 삭제합니다."""
+        safe_name = self.get_safe_filename(company_name)
+        file_path = os.path.join(self.company_dir, f"{safe_name}.md")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return True
+        return False
+
     def save_draft(self, company: str, role: str, q_num: str, keyword: str, content: str) -> str:
         """생성된 초안을 계층형 폴더 구조로 저장합니다."""
         safe_company = self.get_safe_filename(company)
