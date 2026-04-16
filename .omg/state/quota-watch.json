@@ -1,0 +1,19 @@
+{
+  "turn_count": 22,
+  "last_session_id": "6545e733-c674-4891-9d01-9e0439f3c17e",
+  "last_event_key": "6545e733-c674-4891-9d01-9e0439f3c17e:transcript:6e8e9eb01ad9e70c8d970ee2dd4bc8b4bbc9eb85d57768126b9a83167d8509ba",
+  "last_transcript_hash": "6e8e9eb01ad9e70c8d970ee2dd4bc8b4bbc9eb85d57768126b9a83167d8509ba",
+  "last_model": "gemini-3-flash-preview",
+  "last_provider": "gemini",
+  "last_turn_total_tokens": 90585,
+  "last_session_total_tokens": 2881893,
+  "session_totals_by_model": {
+    "gemini-3-flash-preview": 2881893
+  },
+  "session_totals_by_provider": {
+    "gemini": 2881893
+  },
+  "cwd_mode": "parent-leaf",
+  "last_cwd_label": "gemini/coverletter",
+  "updated_at": "2026-04-15T02:30:47.226Z"
+}
