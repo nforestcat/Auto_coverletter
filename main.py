@@ -48,8 +48,21 @@ class CVAIProcessor:
             with open(file_path, "r", encoding="utf-8") as f: return f.read()
 
         self.log(f"🔍 {self.research_model} 모델로 실시간 검색 시작...")
-        prompt = f"'{company_name}'의 공식 홈페이지와 최신 뉴스를 검색하여 비전, 핵심 가치, 인재상, 최근 사업 전략 키워드를 Markdown 형식으로 상세히 정리해 주세요. 모든 내용은 반드시 한국어로 작성하세요."
-        instruction = "당신은 전문 기업 분석가입니다. 반드시 Google Search 도구를 사용하여 최신 정보를 확인하고 한국어로 작성해야 합니다."
+        prompt = f"""
+        '{company_name}'에 대한 기업 정보를 다음 기준에 따라 검색하고 Markdown 형식으로 상세히 정리해 주세요.
+        
+        [검색 및 출처 기준 - 매우 중요]
+        1. **공식 출처 최우선**: 반드시 해당 기업의 **공식 홈페이지** 및 **공식 채용 홈페이지(Recruit)**의 내용을 최우선으로 참고하세요.
+        2. **비공식 정보 배제**: 나무위키, 개인 블로그, 카페, 커뮤니티 등 검증되지 않은 개인이 작성한 정보는 분석에서 철저히 제외하세요.
+        3. **최신성 보장**: 최근 1년 이내의 공식 보도자료나 뉴스 기사를 통해 최신 사업 전략 키워드를 도출하세요.
+        
+        [정리 항목]
+        - 기업의 비전 및 미션
+        - 핵심 가치 (Core Values)
+        - 인재상 (Ideal Candidate)
+        - 최근 주요 사업 전략 및 기술 키워드
+        """
+        instruction = "당신은 전문 기업 분석가입니다. 반드시 Google Search 도구를 사용하여 공식적인 정보만을 선별하고 모든 내용을 한국어로 작성해야 합니다."
         google_search_tool = types.Tool(google_search=types.GoogleSearch())
 
         response = self.client.models.generate_content(
