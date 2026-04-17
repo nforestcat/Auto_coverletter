@@ -27,21 +27,20 @@ if 'company_info' not in st.session_state:
     st.session_state.company_info = ""
 if 'draft' not in st.session_state:
     st.session_state.draft = None
-# 폼 입력을 위한 세션 (위젯 key와 충돌 방지용)
 if 'reset_counter' not in st.session_state:
     st.session_state.reset_counter = 0
+if 'classified_type' not in st.session_state:
+    st.session_state.classified_type = "분류 중..."
 
 def clear_inputs():
-    """기업/직무 정보를 제외한 모든 결과와 상태를 초기화합니다."""
     st.session_state.analysis_result = None
     st.session_state.company_info = ""
     st.session_state.draft = None
-    # 위젯들을 강제 리렌더링하기 위해 카운터 증가
     st.session_state.reset_counter += 1
+    st.session_state.classified_type = "분류 중..."
     logger.info("🧹 사용자 요청으로 입력 내용 및 결과 초기화됨")
 
 def clear_company_cache(cache_mgr, company_name):
-    """특정 기업의 로컬 캐시를 삭제하고 세션을 리셋합니다."""
     if cache_mgr.delete_company_cache(company_name):
         st.session_state.company_info = ""
         st.success(f"✅ '{company_name}'의 캐시 파일이 삭제되었습니다.")
@@ -70,20 +69,29 @@ def main():
         llm = LLMEngine(client)
         searcher = SearchUtils(client)
         
-        st.info("💡 **모델 정보**\n- 검색: Gemma 4 26B\n- 분석: Gemma 4 31B")
+        st.info("💡 **모델 정보**\n- 검색: Gemma 4 26B\n- 분류: Gemma 3 12B\n- 분석/작성: Gemma 4 31B")
         
         st.markdown("---")
-        st.subheader("🧹 캐시 및 데이터 관리")
+        st.subheader("📋 작성 옵션")
+        # [변경 사항] 문항 성격 선택(selectbox) 제거 -> AI 자동 분류로 대체
+        st.caption("✨ **AI 자동 분류 적용됨**\n문항을 입력하면 AI가 성격을 스스로 판단합니다.")
         
-        if st.button("🔄 현재 진행 상태 초기화", use_container_width=True, help="작성 중인 내용과 분석 결과를 모두 지웁니다."):
+        target_length = st.select_slider(
+            "목표 글자 수 (공백 포함)",
+            options=[300, 500, 700, 800, 1000, 1200, 1500],
+            value=1000,
+            help="AI가 이 글자 수의 90~95% 수준으로 내용을 조절하여 작성합니다."
+        )
+
+        st.markdown("---")
+        st.subheader("🧹 데이터 관리")
+        if st.button("🔄 현재 진행 상태 초기화", use_container_width=True):
             clear_inputs()
             st.rerun()
 
-    # 메인 레이아웃: 좌측(입력), 우측(결과/로그)
     col_left, col_right = st.columns([1.1, 1.3], gap="large")
 
     with col_left:
-        # 1. 지원 기본 정보 (눈에 띄게 박스 처리)
         st.subheader("1. 🎯 타겟 정보")
         with st.container(border=True):
             c_col1, c_col2, c_col3 = st.columns([2, 2, 1])
@@ -94,15 +102,32 @@ def main():
             with c_col3:
                 q_num = st.text_input("🔢 문항 번호", value="1")
             
-            # 기업 캐시 삭제 버튼을 해당 기업 이름 아래에 작게 배치
-            if st.button(f"'{company}' 데이터 새로 고침", key="refresh_cache", help="인터넷에서 최신 기업 정보를 다시 검색합니다."):
-                clear_company_cache(cache, company)
+            # 통합형 스마트 버튼 (기업 정보 준비/업데이트)
+            col_btn1, col_btn2 = st.columns([3, 1])
+            with col_btn1:
+                if st.button(f"🔍 '{company}' 기업 정보 불러오기", use_container_width=True):
+                    with st.spinner(f"'{company}' 정보를 확인 중입니다..."):
+                        comp_info = cache.load_company_data(company)
+                        if not comp_info:
+                            comp_info = searcher.search_company_info(company)
+                            cache.save_company_data(company, comp_info)
+                            st.toast(f"✅ '{company}' 정보를 새로 검색하여 저장했습니다.", icon="✨")
+                        else:
+                            st.toast(f"✅ 로컬에 저장된 '{company}' 정보를 불러왔습니다.", icon="📦")
+                        st.session_state.company_info = comp_info
+            with col_btn2:
+                if st.button("🔄 강제 새로고침", help="기존 캐시를 삭제하고 최신 정보를 다시 검색합니다.", use_container_width=True):
+                    clear_company_cache(cache, company)
+                    st.toast(f"'{company}' 캐시가 삭제되었습니다. 다시 불러오기를 눌러주세요.", icon="🗑️")
+            
+            if st.session_state.company_info:
+                with st.expander(f"🏢 {company} 분석 데이터 (클릭하여 확인)", expanded=False):
+                    st.info("자소서 작성 시 아래의 기업 핵심 가치와 인재상을 참고하여 작성해 보세요.")
+                    st.markdown(st.session_state.company_info)
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 2. 자소서 내용 입력란
         st.subheader("2. ✍️ 자기소개서 작성")
-        # reset_counter를 key에 포함시켜 초기화 버튼 클릭 시 폼이 비워지도록 유도
         question = st.text_area(
             "지원 항목 (문항 전체를 붙여넣으세요)", 
             height=100, 
@@ -117,7 +142,6 @@ def main():
             key=f"exp_input_{st.session_state.reset_counter}"
         )
         
-        # 3. AI 피드백 핑퐁 영역 (채팅 느낌)
         st.subheader("3. 💬 면접관 추가 질문 답변")
         st.info("우측 탭에서 AI 면접관의 꼬리 질문을 확인하고 이곳에 추가 답변을 적어주세요.")
         feedback_answer = st.text_area(
@@ -138,7 +162,11 @@ def main():
                 logger.info(f"--- 🚀 프로세스 시작: {company} ({q_num}번 문항) ---")
                 with st.spinner(f"🕵️ [{company}] 맞춤형 AI 면접관이 서류를 검토 중입니다..."):
                     try:
-                        # 1. 기업 정보 확보
+                        # [Step A] 문항 성격 자동 분류 (초경량 호출)
+                        draft_type = llm.classify_question(question)
+                        st.session_state.classified_type = draft_type
+                        
+                        # [Step B] 기업 정보 확보
                         comp_info = cache.load_company_data(company)
                         if not comp_info:
                             logger.info(f"🔍 기업 정보 실시간 검색 시작: {company}")
@@ -149,31 +177,24 @@ def main():
                         
                         st.session_state.company_info = comp_info
                         
-                        # 2. 분석 실행
                         user_data = {
-                            "company": company,
-                            "role": role,
-                            "q_num": q_num,
-                            "question": question,
-                            "experience": experience,
+                            "company": company, "role": role, "q_num": q_num,
+                            "question": question, "experience": experience,
                             "feedback_answer": feedback_answer
                         }
                         logger.info("🧪 AI 경험 분석 및 진단 중...")
                         result = llm.analyze_experience(user_data, comp_info)
                         st.session_state.analysis_result = result
                         
-                        # 3. 충분할 경우 초안 자동 생성
                         if result.is_sufficient:
-                            logger.info("✨ 분석 완료. 초안 생성 단계 진입.")
-                            draft = llm.generate_draft(user_data, result)
+                            logger.info(f"✨ 분석 완료. 초안 생성 단계 진입 (자동분류: {draft_type}, 길이: {target_length})")
+                            draft = llm.generate_draft(user_data, result, draft_type, target_length)
                             st.session_state.draft = draft
-                            # 파일 저장
                             file_path = cache.save_draft(company, role, q_num, result.question_keyword, draft)
                             st.session_state.file_path = file_path
                             logger.info(f"💾 초안 저장 완료: {file_path}")
                         else:
                             logger.warning(f"⚠️ 정보 부족. 꼬리 질문 생성됨.")
-                            # 충분하지 않을 때는 초안 제거
                             st.session_state.draft = None 
                             
                     except Exception as e:
@@ -182,18 +203,16 @@ def main():
                 
                 logger.info("--- 🏁 프로세스 종료 ---")
 
-        # 📊 우측 영역: 결과 렌더링 (Tabs 활용)
         if st.session_state.analysis_result:
             res = st.session_state.analysis_result
-            
-            # 탭 구조로 변경하여 화면을 깔끔하게 유지
             tab1, tab2, tab3 = st.tabs(["📝 분석 및 피드백", "✨ 최종 초안", "🏢 참고한 기업 정보"])
             
             with tab1:
                 st.subheader("📊 역량 진단 리포트")
+                # 분류 결과 안내 표시
+                st.info(f"🔍 AI 문항 성격 판단: **{st.session_state.classified_type}**")
                 
                 if not res.is_sufficient:
-                    # 정보 부족 시: 챗봇 형태의 UI로 꼬리질문 강조
                     with st.chat_message("assistant", avatar="🕵️"):
                         st.markdown("**면접관의 피드백 및 꼬리 질문**")
                         st.warning(res.follow_up_question)
@@ -216,14 +235,15 @@ def main():
                     st.markdown("---")
                     col_dl1, col_dl2 = st.columns([1, 1])
                     with col_dl1:
+                        total_chars = len(st.session_state.draft)
+                        st.info(f"📊 현재 초안 분량: **공백 포함 {total_chars}자** (목표: {target_length}자)")
                         st.caption(f"💾 자동 저장 위치: `{st.session_state.file_path}`")
                     with col_dl2:
                         st.download_button(
                             label="📝 마크다운(.md) 파일 다운로드", 
                             data=st.session_state.draft, 
                             file_name=os.path.basename(st.session_state.file_path),
-                            use_container_width=True,
-                            type="primary"
+                            use_container_width=True, type="primary"
                         )
                 else:
                     st.info("아직 정보가 부족하여 초안이 생성되지 않았습니다. 피드백을 보고 내용을 보완해 주세요!")
@@ -232,21 +252,17 @@ def main():
                 st.subheader(f"🏢 {company} 분석 데이터")
                 if st.session_state.company_info:
                     st.info("AI가 아래 수집된 정보를 바탕으로 분석을 진행했습니다.")
-                    with st.container(height=400): # 긴 텍스트 스크롤 처리
+                    with st.container(height=400):
                         st.text(st.session_state.company_info)
-                else:
-                    st.write("캐시된 기업 정보가 없습니다.")
         else:
-            # 분석 전 초기 상태일 때 보여줄 가이드 화면
             st.info("👈 좌측에 정보를 입력하고 **[정밀 분석 및 초안 생성]** 버튼을 누르면 이 곳에 결과가 나타납니다.")
-            
             with st.container(border=True):
                 st.markdown("""
                 **💡 이용 가이드**
-                1. 타겟 기업과 직무를 명확히 적어주세요. (AI가 해당 기업의 인재상을 자동 검색합니다.)
-                2. 자소서 문항과 본인의 경험을 의식의 흐름대로 편하게 적어주세요.
+                1. 타겟 기업과 직무를 명확히 적어주세요.
+                2. 자소서 문항을 입력하면 **AI가 문항의 성격(지원동기/경험/인성)을 자동으로 분류**합니다.
                 3. AI가 부족한 부분을 찾아 꼬리 질문을 던지면, 핑퐁 대화하듯 답변을 추가해 주세요.
-                4. 내용이 충분해지면 완벽한 구조의 자소서 초안이 자동 생성됩니다!
+                4. 내용이 충분해지면 선택한 **목표 글자 수**에 맞춰 자소서가 자동 생성됩니다!
                 """)
 
 if __name__ == "__main__":
