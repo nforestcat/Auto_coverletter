@@ -60,7 +60,7 @@ class LLMEngine:
                     temperature=0.2, # 온도는 낮게 유지하는 것이 좋습니다
                     top_p=0.8,
                     top_k=40,
-                    max_output_tokens=2048, # 4096에서 조금 줄여서 빠른 실패 유도
+                    max_output_tokens=8196, # 4096에서 조금 줄여서 빠른 실패 유도
                 ),
             )
             
