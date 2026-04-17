@@ -142,14 +142,24 @@ def main():
             key=f"exp_input_{st.session_state.reset_counter}"
         )
         
-        st.subheader("3. 💬 면접관 추가 질문 답변")
-        st.info("우측 탭에서 AI 면접관의 꼬리 질문을 확인하고 이곳에 추가 답변을 적어주세요.")
-        feedback_answer = st.text_area(
-            "보완 내용 입력", 
-            height=120, 
-            placeholder="면접관의 질문에 대한 답변을 편하게 적어주세요.", 
-            key=f"fb_input_{st.session_state.reset_counter}"
-        )
+        # [수정된 부분] 3. 면접관 추가 질문 답변 (동적 활성화)
+        # 분석 결과가 있고(not None), 정보가 부족할 때(False)만 화면에 표시
+        if st.session_state.analysis_result is not None and not st.session_state.analysis_result.is_sufficient:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.subheader("3. 💬 면접관 추가 질문 답변")
+            
+            # 사용자 편의를 위해 우측 탭의 질문을 좌측에도 한 번 더 보여줌
+            st.warning(f"**🕵️ 면접관의 질문:** {st.session_state.analysis_result.follow_up_question}")
+            
+            feedback_answer = st.text_area(
+                "위 질문에 대한 보완 내용을 편하게 적어주세요.", 
+                height=120, 
+                key=f"fb_input_{st.session_state.reset_counter}"
+            )
+        else:
+            # 분석 전이거나, 정보가 충분해서 텍스트 박스가 숨겨졌을 때 
+            # 백엔드 엔진(llm_engine)으로 빈 문자열을 안전하게 넘기기 위한 더미 변수
+            feedback_answer = ""
 
         st.markdown("<br>", unsafe_allow_html=True)
         btn_analyze = st.button("🚀 실무 면접관 정밀 분석 및 초안 생성", use_container_width=True, type="primary")
