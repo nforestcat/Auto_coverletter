@@ -13,6 +13,7 @@ coverletter/
 research_company.py
 cv_auto_gui.py
 test_search.py
+test_classification.py
 
 # 프로젝트 결과물 및 데이터
 company/
