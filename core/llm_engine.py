@@ -192,8 +192,3 @@ class LLMEngine:
             ),
         )
         return response.text
-STRUCTION,
-                temperature=0.7,
-            ),
-        )
-        return response.text
