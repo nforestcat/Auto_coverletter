@@ -2,6 +2,9 @@ import os
 import re
 import json
 import datetime
+from core.logger import get_logger
+
+logger = get_logger("CacheManager")
 
 class CacheManager:
     def __init__(self):
@@ -28,7 +31,8 @@ class CacheManager:
             last_updated = datetime.datetime.strptime(date_part, "%Y-%m-%d")
             delta = datetime.datetime.now() - last_updated
             return delta.days > days
-        except:
+        except Exception as e:
+            logger.warning(f"⚠️ 날짜 파싱 실패 ('{last_updated_str}'): {e}")
             return True # 날짜 형식이 잘못된 경우 만료된 것으로 간주
 
     def load_company_data(self, company_name: str) -> dict:
@@ -43,7 +47,8 @@ class CacheManager:
                     if self.is_cache_expired(data.get("last_updated", "")):
                         return None
                     return data
-            except:
+            except Exception as e:
+                logger.warning(f"⚠️ '{company_name}' 캐시 파일 읽기/파싱 실패: {e}")
                 return None
         return None
 
@@ -80,3 +85,4 @@ class CacheManager:
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
         return file_path
+ file_path
