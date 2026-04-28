@@ -35,10 +35,9 @@ class SearchUtils:
         try:
             clean_json = self._extract_json(response.text)
             company_data = json.loads(clean_json)
-            # 수동으로 필드 보강 (프롬프트에서 생성하지만 명시적 보장)
-            if "last_updated" not in company_data or company_data["last_updated"] == "YYYY-MM-DD":
-                import datetime
-                company_data["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d")
+            # 검색을 수행한 시점을 최종 업데이트 날짜로 강제 지정
+            import datetime
+            company_data["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d")
             return company_data
         except Exception as e:
             # 파싱 실패 시 최소한의 구조 반환

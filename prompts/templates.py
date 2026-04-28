@@ -43,13 +43,12 @@ COMPANY_SEARCH_PROMPT = """
   "core_values": ["핵심 가치1", "핵심 가치2", "핵심 가치3"],
   "ideal_candidate": ["인재상1", "인재상2", "인재상3"],
   "business_strategy": [
-    {{"title": "전략명1", "description": "전략 내용 요약(3줄 이내)"}},
-    {{"title": "전략명2", "description": "전략 내용 요약(3줄 이내)"}}
+    {"title": "전략명1", "description": "전략 내용 요약(3줄 이내)"},
+    {"title": "전략명2", "description": "전략 내용 요약(3줄 이내)"}
   ],
-  "tech_roadmap": ["핵심기술1", "핵심기술2", "핵심기술3"],
-  "last_updated": "YYYY-MM-DD"
-}}
-"""
+  "tech_roadmap": ["핵심기술1", "핵심기술2", "핵심기술3"]
+  }
+  """
 
 COMPANY_SEARCH_INSTRUCTION = "당신은 전문 기업 분석가입니다. 반드시 Google Search 도구를 사용하여 공식적인 정보만을 선별하고 모든 내용을 한국어로 작성해야 합니다. 결과는 반드시 순수한 JSON 형식으로만 반환하세요."
 
