@@ -102,6 +102,7 @@ class LLMEngine:
             return MasterProfile(
                 candidate_summary="분석 오류 발생",
                 tech_stack=[],
+                education_and_certs=[],
                 core_experiences=[]
             )
 
