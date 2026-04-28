@@ -69,7 +69,10 @@ class LLMEngine:
             ),
         )
         
-        result = response.text.strip()
+        # 응답 텍스트에서 첫 번째 숫자만 추출
+        match = re.search(r'\d', response.text)
+        result = match.group(0) if match else "2" # 숫자를 못 찾으면 기본값 2(직무경험)로 폴백
+        
         mapping = {
             "1": "지원동기", "2": "직무경험", "3": "성격장단점", 
             "4": "팀워크/갈등해결", "5": "도전/실패극복", "6": "직무전문성", "7": "산업/사회이슈"
