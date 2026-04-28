@@ -15,3 +15,6 @@ python-dotenv>=1.0.1
 
 # 보안 및 통신 안정성 (SSL 인증서 지원)
 certifi>=2024.2.2
+
+# PDF 정밀 파싱
+pdfplumber>=0.11.0

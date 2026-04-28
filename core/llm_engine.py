@@ -4,6 +4,7 @@ from typing import List
 from pydantic import BaseModel, Field, ValidationError
 from google.genai import types
 from prompts.templates import (
+    RESUME_PARSER_PROMPT,
     EXPERIENCE_ANALYSIS_PROMPT, 
     EXPERIENCE_ANALYSIS_INSTRUCTION,
     DRAFT_GEN_PROMPT,
@@ -15,6 +16,12 @@ from core.logger import get_logger
 logger = get_logger("LLMEngine")
 
 # AI 응답 구조 정의
+class MasterProfile(BaseModel):
+    candidate_summary: str = Field(description="지원자의 핵심 역량 및 특징 3줄 요약")
+    tech_stack: List[str] = Field(description="보유 기술 스택 리스트")
+    education_and_certs: List[str] = Field(description="학력, 자격증, 어학 등 요약 리스트")
+    core_experiences: List[dict] = Field(description="주요 프로젝트 및 역할 리스트")
+
 class ExperienceAnalysis(BaseModel):
     is_sufficient: bool = Field(description="정보가 충분한지 여부")
     fit_analysis: str = Field(description="Step 1: 문항 의도 및 기업 핏(Fit) 연결 분석 결과")
@@ -70,6 +77,33 @@ class LLMEngine:
         classified_type = mapping.get(result, "직무경험") # 기본값
         logger.info(f"🏷️ 정밀 분류 결과: {classified_type}")
         return classified_type
+
+    def parse_resume(self, resume_text: str) -> MasterProfile:
+        """지원자의 이력서/경험 글을 구조화된 마스터 프로필로 변환합니다."""
+        logger.info("📄 이력서 구조화 분석 시작")
+        prompt = RESUME_PARSER_PROMPT.format(resume_text=resume_text[:10000])
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction="당신은 최고 수준의 HR 데이터 파서입니다. 반드시 JSON으로만 응답하세요.",
+                    response_mime_type="application/json",
+                    response_schema=MasterProfile,
+                    temperature=0.1,
+                ),
+            )
+            
+            clean_json = self._extract_json(response.text)
+            return MasterProfile.model_validate_json(clean_json)
+        except Exception as e:
+            logger.error(f"❌ 이력서 분석 중 오류 발생: {str(e)}")
+            return MasterProfile(
+                candidate_summary="분석 오류 발생",
+                tech_stack=[],
+                core_experiences=[]
+            )
 
     def analyze_experience(self, user_data: dict, company_info: str) -> ExperienceAnalysis:
         """실무 면접관 관점에서 경험을 정밀 분석합니다."""

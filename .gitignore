@@ -9,6 +9,10 @@ venv/
 ENV/
 coverletter/
 
+# 임시 및 백업 파일
+temp/
+coverletter.zip
+
 # 통합 전 초기 코드 및 테스트 파일
 research_company.py
 cv_auto_gui.py
@@ -16,8 +20,7 @@ test_search.py
 test_classification.py
 
 # 프로젝트 결과물 및 데이터
-company/
-draft/
+.cache/
 *.log
 user_profile.md
 company_info.md
