@@ -122,7 +122,7 @@ class LLMEngine:
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction="당신은 냉철하지만 따뜻한 커리어 컨설턴트(omg-analyst)입니다. 반드시 JSON으로만 응답하세요.",
+                    system_instruction=EXPERIENCE_ANALYSIS_INSTRUCTION,
                     response_mime_type="application/json",
                     response_schema=ExperienceAnalysis,
                     temperature=0.2,
