@@ -38,3 +38,8 @@ draft.md
 # IDE 설정
 .vscode/
 .idea/
+
+# PyInstaller 빌드 결과물
+build/
+dist/
+*.spec
