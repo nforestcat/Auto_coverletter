@@ -44,11 +44,14 @@ class SearchUtils:
             import datetime
             return {
                 "company_name": company_name,
+                "target_division": "",
                 "vision_mission": "정보를 불러오는 중 오류가 발생했습니다.",
                 "core_values": [],
                 "ideal_candidate": [],
+                "organizational_culture": [],
                 "business_strategy": [],
                 "tech_roadmap": [],
+                "recent_issues": [],
                 "last_updated": datetime.datetime.now().strftime("%Y-%m-%d"),
                 "raw_text": response.text
             }
