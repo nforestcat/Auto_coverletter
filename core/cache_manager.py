@@ -23,7 +23,9 @@ class CacheManager:
     def is_cache_expired(self, last_updated_str: str, days: int = 30) -> bool:
         """캐시가 지정된 날짜보다 오래되었는지 확인합니다."""
         try:
-            last_updated = datetime.datetime.strptime(last_updated_str, "%Y-%m-%d")
+            # LLM이 '2026-04-28T14:30' 등으로 주더라도 앞의 10자리(날짜)만 잘라서 사용
+            date_part = last_updated_str[:10] 
+            last_updated = datetime.datetime.strptime(date_part, "%Y-%m-%d")
             delta = datetime.datetime.now() - last_updated
             return delta.days > days
         except:
