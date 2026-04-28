@@ -34,7 +34,7 @@ def run_streamlit(port):
 if __name__ == "__main__":
     # 1. 빈 포트 동적 할당
     port = get_free_port()
-    print(f"🚀 빈 포트를 찾았습니다. Port: {port} 에서 Streamlit 서버를 시작합니다...")
+    print(f"[INFO] 빈 포트를 찾았습니다. Port: {port} 에서 Streamlit 서버를 시작합니다...")
 
     # 2. Streamlit을 백그라운드 스레드에서 실행
     t = threading.Thread(target=run_streamlit, args=(port,))
