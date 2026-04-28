@@ -88,7 +88,7 @@ class LLMEngine:
                 model=self.model_name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    system_instruction="당신은 최고 수준의 HR 데이터 파서입니다. 반드시 JSON으로만 응답하세요.",
+                    system_instruction=RESUME_PARSER_INSTRUCTION,
                     response_mime_type="application/json",
                     response_schema=MasterProfile,
                     temperature=0.1,
@@ -184,6 +184,11 @@ class LLMEngine:
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=DRAFT_GEN_INSTRUCTION,
+                temperature=0.7,
+            ),
+        )
+        return response.text
+STRUCTION,
                 temperature=0.7,
             ),
         )
