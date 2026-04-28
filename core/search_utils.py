@@ -21,26 +21,29 @@ class SearchUtils:
         prompt = COMPANY_SEARCH_PROMPT.format(company_name=company_name)
         
         google_search_tool = types.Tool(google_search=types.GoogleSearch())
-
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=COMPANY_SEARCH_INSTRUCTION,
-                tools=[google_search_tool],
-                response_mime_type="application/json"
-            )
-        )
         
+        response_text = ""
+
         try:
-            clean_json = self._extract_json(response.text)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=COMPANY_SEARCH_INSTRUCTION,
+                    tools=[google_search_tool],
+                    response_mime_type="application/json"
+                )
+            )
+            response_text = response.text if hasattr(response, 'text') else ""
+            
+            clean_json = self._extract_json(response_text)
             company_data = json.loads(clean_json)
             # 검색을 수행한 시점을 최종 업데이트 날짜로 강제 지정
             import datetime
             company_data["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d")
             return company_data
         except Exception as e:
-            # 파싱 실패 시 최소한의 구조 반환
+            # API 호출 및 파싱 실패 시 최소한의 구조 반환
             import datetime
             return {
                 "company_name": company_name,
@@ -53,5 +56,5 @@ class SearchUtils:
                 "tech_roadmap": [],
                 "recent_issues": [],
                 "last_updated": datetime.datetime.now().strftime("%Y-%m-%d"),
-                "raw_text": response.text
+                "raw_text": response_text or str(e)
             }
