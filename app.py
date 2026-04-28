@@ -146,7 +146,7 @@ def main():
             "목표 글자 수 (공백 포함)",
             options=[300, 500, 700, 800, 1000, 1200, 1500],
             value=1000,
-            help="AI가 이 글자 수의 80~85% 수준을 목표로 보수적으로 작성하여 수정할 여유 공간을 남깁니다. (글자 수 초과 방지)"
+            help="AI가 요청하신 분량에 맞춰 내용을 최대한 풍성하게 작성합니다. 생성된 초안에서 불필요한 내용을 덜어내며 나만의 자소서를 완성해 보세요!"
         )
 
         st.markdown("---")
@@ -316,8 +316,9 @@ def main():
                     col_dl1, col_dl2 = st.columns([1, 1])
                     with col_dl1:
                         total_chars = len(st.session_state.draft)
-                        st.info(f"📊 현재 초안 분량: **공백 포함 {total_chars}자** (목표: {target_length}자)")
-                        st.caption(f"💾 자동 저장 위치: `{st.session_state.file_path}`")
+                        st.info(f"📊 현재 초안 분량: **공백 포함 {total_chars}자** / 설정 목표: {target_length}자")
+                        st.caption("💡 팁: 분량이 넘칠 경우, 핵심 키워드 위주로 문장을 다듬으면 더 임팩트 있는 글이 됩니다.")
+                        st.caption(f"💾 저장 경로: `{st.session_state.file_path}`")
                     with col_dl2:
                         st.download_button(
                             label="📝 마크다운(.md) 파일 다운로드", 
