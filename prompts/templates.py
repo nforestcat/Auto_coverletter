@@ -39,16 +39,21 @@ COMPANY_SEARCH_PROMPT = """
 반드시 아래 JSON 구조를 엄격히 준수하여 응답하세요:
 {{
   "company_name": "{company_name}",
+  "target_division": "지원하는 특정 사업부문 (예: DX부문, 없으면 전체 기재)",
   "vision_mission": "기업의 비전 및 미션 요약",
   "core_values": ["핵심 가치1", "핵심 가치2", "핵심 가치3"],
   "ideal_candidate": ["인재상1", "인재상2", "인재상3"],
+  "organizational_culture": ["조직문화1", "조직문화2"],
   "business_strategy": [
-    {"title": "전략명1", "description": "전략 내용 요약(3줄 이내)"},
-    {"title": "전략명2", "description": "전략 내용 요약(3줄 이내)"}
+    {{"title": "전략명1", "description": "전략 내용 요약(3줄 이내)"}},
+    {{"title": "전략명2", "description": "전략 내용 요약(3줄 이내)"}}
   ],
-  "tech_roadmap": ["핵심기술1", "핵심기술2", "핵심기술3"]
-  }
-  """
+  "tech_roadmap": ["핵심기술1", "핵심기술2", "핵심기술3"],
+  "recent_issues": [
+    {{"issue": "최근 6개월 내 중요 뉴스/이슈 제목", "impact": "해당 이슈가 기업/산업에 미치는 영향"}}
+  ]
+}}
+"""
 
 COMPANY_SEARCH_INSTRUCTION = "당신은 전문 기업 분석가입니다. 반드시 Google Search 도구를 사용하여 공식적인 정보만을 선별하고 모든 내용을 한국어로 작성해야 합니다. 결과는 반드시 순수한 JSON 형식으로만 반환하세요."
 
