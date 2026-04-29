@@ -3,7 +3,7 @@ echo ==============================================
 echo CV-Auto PyInstaller 빌드 스크립트 시작
 echo ==============================================
 
-python -m PyInstaller --noconfirm --onedir --windowed ^
+python -m PyInstaller --noconfirm --onefile --windowed ^
   --name "CV-Auto" ^
   --add-data "app.py;." ^
   --add-data "core;core" ^
@@ -11,6 +11,7 @@ python -m PyInstaller --noconfirm --onedir --windowed ^
   --copy-metadata streamlit ^
   --copy-metadata google-genai ^
   --copy-metadata pydantic ^
+  --collect-all "streamlit" ^
   --hidden-import "core.cache_manager" ^
   --hidden-import "core.llm_engine" ^
   --hidden-import "core.logger" ^
@@ -20,10 +21,10 @@ python -m PyInstaller --noconfirm --onedir --windowed ^
   --hidden-import "pdfplumber" ^
   --hidden-import "google.genai" ^
   --hidden-import "pydantic" ^
-  --hidden-import "streamlit" ^
   run_app.py
 
 echo ==============================================
 echo 빌드가 완료되었습니다! 
 echo dist 폴더 안에 'CV-Auto' 폴더를 확인해 주세요.
 echo ==============================================
+pause
